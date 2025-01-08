@@ -6,13 +6,10 @@ const User = require("./modals/user.js");
 
 const app = express();
 
+app.use(express.json());
+
 app.post("/signup", async (req, res) => {
-  const user = new User({
-    firstName: "Nikhil",
-    lastName: "Jain",
-    emailId: "nikhil@jain1.com",
-    password: "nikhil@123",
-  });
+  const user = new User(req.body);
 
   try {
     await user.save();
