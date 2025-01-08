@@ -1,35 +1,33 @@
 const express = require("express");
 
+const { connectDB } = require("./config/database.js");
+
+const User = require("./modals/user.js");
+
 const app = express();
 
-app.use(
-  "/hello",
-  (req, res, next) => {
-    next();
+app.post("/signup", async (req, res) => {
+  const user = new User({
+    firstName: "Nikhil",
+    lastName: "Jain",
+    emailId: "nikhil@jain1.com",
+    password: "nikhil@123",
+  });
 
-    res.send("hello node.js");
-    console.log("hello node.js");
-  },
-  (req, res, next) => {
-    next();
-    res.send("2nd response");
-  },
-
-  (req, res) => {
-    res.send("3rd response");
+  try {
+    await user.save();
+    res.send("User added succesfully");
+  } catch (err) {
+    res.status(400).send("Error for saving data " + err.message);
   }
-);
-
-// app.get("/user/:userid/:name/:password", (req, res) => {
-//   console.log(req.params);
-//   console.log(req.query);
-//   res.send({ name: "Nikhil", lastName: "Jain" });
-// });
-
-app.use("/", (req, res) => {
-  res.send("Hello from server !");
 });
-
-app.listen(3000, () => {
-  console.log("server running at port 3000");
-});
+connectDB()
+  .then(() => {
+    console.log("Database connected succesfully");
+    app.listen(3000, () => {
+      console.log("server running at port 3000");
+    });
+  })
+  .catch((err) => {
+    console.error("Database can not be connected ");
+  });
