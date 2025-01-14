@@ -38,7 +38,6 @@ app.post("/login", async (req, res) => {
 
   try {
     const user = await User.findOne({ emailId: emailId });
-    console.log(user);
 
     if (!user) {
       throw new Error("User not found");
