@@ -4,13 +4,16 @@ const { connectDB } = require("./config/database.js");
 
 const User = require("./modals/user.js");
 
-const bcrypt = require("bcryptjs");
+const cookieParser = require("cookie-parser");
+
+const { userAuth } = require("./Middlewares/auth.js");
 
 const app = express();
 
 const { validateSignUpData } = require("./utils/validate.js");
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -43,9 +46,13 @@ app.post("/login", async (req, res) => {
       throw new Error("User not found");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
 
     if (isPasswordValid) {
+      const token = await user.getJWT();
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+      });
       res.send("Login succesfully");
     } else {
       throw new Error("Invalid credentials");
@@ -55,13 +62,35 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/user", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
+  // const cookies = req.cookies;
+  // const {token} = cookies;
+  try {
+    const user = req.user;
+    res.send(user);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+
+  // console.log(cookies);
+});
+
+app.post("/sendConnectionRequest", (req, res) => {
+  try {
+    const user = req.user;
+    console.log(user);
+
+    res.send(user.firstName + "sent connection request");
+  } catch (err) {
+    res.status(400).send("User not found" + err);
+  }
+});
+
+app.get("/user", userAuth, async (req, res) => {
   const emailId = req.body?.emailId;
   console.log(emailId, "emailId");
 
   const user = await User.find({ emailId: emailId });
-
-  console.log(user);
 
   if (user.length === 0) {
     res.status(400).send("User not found");
@@ -71,17 +100,10 @@ app.get("/user", async (req, res) => {
 });
 app.get("/feed", async (req, res) => {
   const emailid = req.body.emailId;
-  console.log(emailid);
 
   const user = await User.findOne({ emailId: emailid });
 
-  console.log(user);
-
-  // if (user.length === 0) {
-  //res.status(400).send("User not found");
-  // } else {
   res.send(user);
-  // }
 });
 
 app.delete("/user", async (req, res) => {
