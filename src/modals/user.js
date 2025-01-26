@@ -53,11 +53,22 @@ const userSchema = mongoose.Schema(
         }
       },
     },
+    photoUrl: {
+      type: String,
+      default: "",
+    },
+    about: {
+      type: String,
+      default: "This user has not provided an about section",
+    },
   },
   {
     timestamps: true,
   }
 );
+
+userSchema.index({ firstName: 1, lastName: 1 });
+userSchema.index({ gender: 1 });
 
 userSchema.methods.getJWT = async function () {
   const user = this;
